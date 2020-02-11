@@ -4,4 +4,154 @@
 
 {% load static %}
 
+<!--- Import Leaflet CSS -->
+<link rel="stylesheet" href="{% static 'app/leaflet/leaflet.css' %}">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+
+<style>
+    #map {
+        height: calc(100vh - 80px) !important;
+    }
+</style>
+
+<div id="map"></div>
+
+<!-- Import Leafleft JS -->
+<script src="{% static 'app/jquery/dist/jquery.min.js' %}"></script>
+<script src="{% static 'app/leaflet/leaflet.js' %}"></script>
+
+<script type="text/javascript">
+
+    // API url
+    var dataUrl = '{% url "quakedataset" %}';
+    var predUrl = '{% url "quakedatasetpred" %}';
+    var predRisk = '{% url "quakedatasetpredrisk" %}';
+
+    // Basemap urls
+    var watercolor = L.tileLayer('http://c.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    });
+    var osm_map = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	});
+    var osm_humanitarian = L.tileLayer('http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	});
+	var esri_dark_gray_base = L.tileLayer('http://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+		attribution: '&copy; <a href="http://services.arcgisonline.com/arcgis/rest/services">ESRI</a> arcgisonline'
+	});
+	var world_ocean_base = L.tileLayer('http://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}', {
+		attribution: '&copy; <a href="http://services.arcgisonline.com/arcgis/rest/services">ESRI</a> arcgisonline'
+	});
+	var world_street_map = L.tileLayer('http://services.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+		attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+	});
+	var world_imagery = L.tileLayer('http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+		attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+	});
+
+    // Initialize the map
+    var map = L.map('map', {
+        layers: [watercolor] // Default basemap
+    }).setView([8.7832, 34.5085], 3)
+
+    // Create layer groups
+    var marker_layers = L.layerGroup().addTo(map);
+    var point_layers = L.layerGroup().addTo(map);
+    var pred_points_layers = L.layerGroup().addTo(map);
+    var pred_risk_layers = L.layerGroup().addTo(map);
+
+    // Get marker layers    
+    $.getJSON(dataUrl, function(data) {
+        $.each(data, function(i, item) {
+            var marker = L.marker(L.latLng(item.fields.Latitude, item.fields.Longitude))
+            marker.bindPopup("<h4>Magnitude: " + item.fields.Magnitude.toString() + "</h4>")
+            marker.on('mouseover', function(e) {
+                this.openPopup();
+            });
+            marker.on('mouseout', function(e) {
+                this.closePopup();
+            });
+            marker_layers.addLayer(marker);
+        });
+    });
+
+    // Get point layers
+    $.getJSON(dataUrl, function(data) {
+        $.each(data, function(i, item) {
+            var cpoints = L.circle(L.latLng(item.fields.Latitude, item.fields.Longitude), {
+                color: '#009999',
+                radius: item.fields.Magnitude * 50000,
+                fillOpacity: 0.7
+            });
+            cpoints.bindPopup("<h4>Magnitude: " + item.fields.Magnitude.toString() + "</h4>")
+            cpoints.on('mouseover', function(e) {
+                this.openPopup();
+            });
+            cpoints.on('mouseout', function(e) {
+                this.closePopup();
+            });
+            point_layers.addLayer(cpoints);
+        });
+    });
+
+    // Get predicted points layers
+    $.getJSON(predUrl, function(data) {
+        $.each(data, function(i, item) {
+            var cpoints_pred = L.circle(L.latLng(item.fields.Latitude, item.fields.Longitude), {
+                color: '#ccff33',
+                radius: item.fields.Magnitude * 50000,
+                fillOpacity: 0.7
+            });
+            cpoints_pred.bindPopup("<h4>Magnitude: " + item.fields.Magnitude.toString() + "</h4>")
+            cpoints_pred.on('mouseover', function(e) {
+                this.openPopup();
+            });
+            cpoints_pred.on('mouseout', function(e) {
+                this.closePopup();
+            });
+            pred_points_layers.addLayer(cpoints_pred);
+        });
+    });
+
+    // Get predicted point risk layers
+    $.getJSON(predRisk, function(data) {
+        $.each(data, function(i, item) {
+            var cpoints_risk = L.circle(L.latLng(item.fields.Latitude, item.fields.Longitude), {
+                color: '#cc0000',
+                radius: item.fields.Magnitude * 50000,
+                fillOpacity: 0.7
+            });
+            cpoints_risk.bindPopup("<h4>Magnitude: " + item.fields.Magnitude.toString() + "</h4>")
+            cpoints_risk.on('mouseover', function(e) {
+                this.openPopup();
+            });
+            cpoints_risk.on('mouseout', function(e) {
+                this.closePopup();
+            });
+            pred_risk_layers.addLayer(cpoints_risk);
+        });
+    });
+
+    var baseLayers = {
+        "Watercolor": watercolor,
+        "Open Street Map": osm_map,
+        "OSM Humanitarian": osm_humanitarian,
+        "Dark Gray Base": esri_dark_gray_base,
+        "World Ocean Base": world_ocean_base,
+        "World Street Map": world_street_map,
+        "World Imagery": world_imagery
+    };
+
+    var overlayMaps = {
+        "Quakes (1965 - 2016)": marker_layers,
+        "Points (1965 - 2016)": point_layers,
+        "Predicted Quakes (2017)": pred_points_layers,
+        "High Risk Quakes (2017)": pred_risk_layers
+    };
+    
+    // Add the layers control
+    L.control.layers(baseLayers, overlayMaps).addTo(map);
+</script>
+
 {% endblock %}

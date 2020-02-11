@@ -20,10 +20,12 @@ from django.conf.urls import url
 import django.contrib.auth.views
 
 import geoQuakesapp.views
-from geoQuakesapp.views import quake_dataset
+from geoQuakesapp.views import quake_dataset, quake_dataset_pred, quake_dataset_pred_risk
 
 urlpatterns = [
     url(r'^$', geoQuakesapp.views.home, name='home'),
     url(r'^quake_dataset/', quake_dataset, name='quakedataset'),
+    url(r'^quake_dataset_pred/', quake_dataset_pred, name='quakedatasetpred'),
+    url(r'^quake_dataset_pred_risk/', quake_dataset_pred_risk, name='quakedatasetpredrisk'),
     path('admin/', admin.site.urls),
 ]
