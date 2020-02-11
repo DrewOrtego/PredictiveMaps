@@ -15,3 +15,13 @@ class Quake(models.Model):
 
     class Meta:
         verbose_name_plural = 'Quake'
+
+class QuakePredictions(models.Model):
+    Latitude = models.FloatField()
+    Longitude = models.FloatField()
+    Magnitude = models.FloatField()
+    Depth = models.FloatField()
+    Score = models.FloatField()
+
+    class Meta:
+        verbose_name_plural = "Quake_Predictions"
